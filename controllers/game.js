@@ -1,4 +1,5 @@
 var ctrlShared = require('./shared');
+var player = require('./players')
 
 function getUnique(count) {
 
@@ -17,6 +18,13 @@ module.exports.readgame = function (req, res) {
   ctrlShared.sendJsonResponse(res, 200, {
       "game" : "conference call bingo",
       'BingoCard': getUnique(5)
-    });;
+    });
 };
 
+
+module.exports.readplayers = function (req, res) {
+  ctrlShared.sendJsonResponse(res, 200, {
+      "game" : "conference call bingo",
+      'players': player.playerstate
+    });
+};
