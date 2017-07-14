@@ -26,21 +26,28 @@ var getplayer = function(req,res){
 
 var newplayer = function(req,res){
     var playername = req.body.playername
-    var playervals = [false,false,false,false,false]
-    var playerphrases = getUnique(5)
-    var playerobj = {
-        'phrases': playerphrases,
-        'vals': playervals
-    }
-    playerstate.put(playername,playerobj)
-    var playerslist =  playerstate.get('players')
-    playerslist.push(playername)
-    console.log(playerslist)
-    playerstate.put('players',playerslist)
-    ctrlShared.sendJsonResponse(res, 200, {
-        "numplayers" : playerstate.get('players').count,
-        "players" : playerstate.get('players'),
-    });
+    if (playerstate.get('players').includes(playername)){
+        ctrlShared.sendJsonResponse(res, 405, {
+            "message" : 'playername is already registered',
+        }) 
+    } else
+   {
+        var playervals = [false,false,false,false,false]
+        var playerphrases = getUnique(5)
+        var playerobj = {
+            'phrases': playerphrases,
+            'vals': playervals
+        }
+        playerstate.put(playername,playerobj)
+        var playerslist =  playerstate.get('players')
+        playerslist.push(playername)
+        console.log(playerslist)
+        playerstate.put('players',playerslist)
+        ctrlShared.sendJsonResponse(res, 200, {
+            "numplayers" : playerstate.get('players').count,
+            "players" : playerstate.get('players'),
+        });
+}
 }
 
 function getUnique(count) {
