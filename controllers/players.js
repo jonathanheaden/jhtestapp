@@ -5,12 +5,11 @@ playerstate.put('players',[])
 var putplayer = function(req,res){
     var playername = req.params.playername
     var index = req.params.phrase
-    console.log(req)
-    var player = playerstate.get('playername')
-    //player.vals[index] = true
-    //playerstate.put(playername,player)
+    var player = playerstate.get(playername)
+    player.vals[index] = true
+    playerstate.put(playername,player)
     ctrlShared.sendJsonResponse(res, 200, {
-      "player" : player
+      "player" : playerstate.get(playername)
     });
 }
 
