@@ -3,11 +3,15 @@ var playerstate = require('memory-cache');
 playerstate.put('players',[])
 
 var putplayer = function(req,res){
-    var playername = req.body.playername
-    var playervals = req.body.playervals
-    var index = req.body.index
-    playervals[index] = true
-    playerstate.put(playername,playervals)
+    var playername = req.params.playername
+    var index = req.params.phrase
+    console.log(req)
+    var player = playerstate.get('playername')
+    //player.vals[index] = true
+    //playerstate.put(playername,player)
+    ctrlShared.sendJsonResponse(res, 200, {
+      "player" : player
+    });
 }
 
 var getplayer = function(req,res){
@@ -53,12 +57,21 @@ function getUnique(count) {
 }
 
 var readplayers = function(req,res){
+    var response = []
+    playerstate.get('players').forEach(function(playername) {
+        var obj = {
+            'name': playername,
+            'card':playerstate.get(playername)
+        }
+        response.push(obj)
+    }, this);
     ctrlShared.sendJsonResponse(res, 200, {
       "game" : "conference call bingo",
-      'players': playerstate
+      'players': response
     });
 }
 
 module.exports.putplayer = putplayer
 module.exports.getplayer = getplayer
 module.exports.newplayer = newplayer
+module.exports.readplayers = readplayers

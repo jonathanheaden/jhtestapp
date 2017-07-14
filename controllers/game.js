@@ -21,10 +21,3 @@ module.exports.readgame = function (req, res) {
     });
 };
 
-
-module.exports.readplayers = function (req, res) {
-  ctrlShared.sendJsonResponse(res, 200, {
-      "game" : "conference call bingo",
-      'players': player.playerstate
-    });
-};

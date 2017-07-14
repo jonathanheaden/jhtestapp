@@ -8,6 +8,8 @@ var ctrlPlayers = require('../controllers/players');
 /* GET home page. */
 router.get('/', ctrlHome.landing);
 router.get('/game', ctrlGame.readgame);
-router.get('/players', ctrlGame.readplayers);
+router.get('/players', ctrlPlayers.readplayers);
 router.get('/players/:playername', ctrlPlayers.getplayer);
+router.put('/players/:playername/:phrase', ctrlPlayers.putplayer);
+
 module.exports = router;
