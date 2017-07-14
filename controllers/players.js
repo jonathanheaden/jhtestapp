@@ -5,12 +5,19 @@ playerstate.put('players',[])
 var putplayer = function(req,res){
     var playername = req.params.playername
     var index = req.params.phrase
-    var player = playerstate.get(playername)
-    player.vals[index] = true
-    playerstate.put(playername,player)
-    ctrlShared.sendJsonResponse(res, 200, {
-      "player" : playerstate.get(playername)
-    });
+    if (['0','1','2','3','4'].includes(index)) 
+    {
+        var player = playerstate.get(playername)
+        player.vals[index] = true
+        playerstate.put(playername,player)
+        ctrlShared.sendJsonResponse(res, 200, {
+            "player" : playerstate.get(playername)
+        });
+    } else {
+        ctrlShared.sendJsonResponse(res, 405, {
+            "message" : 'index out of bounds.'
+        });
+    }
 }
 
 var getplayer = function(req,res){
