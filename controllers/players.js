@@ -83,6 +83,15 @@ var readplayers = function (req, res) {
     });
 }
 
+
+var readgame = function (req, res) {
+  ctrlShared.sendJsonResponse(res, 200, {
+      "game" : "conference call bingo",
+      'BingoCard': getUnique(5)
+    });
+};
+
+
 // helper functions
 
 function getUnique(count) {
@@ -110,3 +119,4 @@ module.exports.putplayer = putplayer
 module.exports.getplayer = getplayer
 module.exports.newplayer = newplayer
 module.exports.readplayers = readplayers
+module.exports.readgame = readgame
