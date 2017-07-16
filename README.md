@@ -13,3 +13,9 @@ foreach ($p in $players.players) {
          }
     }         
  ```
+
+## Bingo web app
+- clients can register new (unique) name
+- client can update their card when they hear their phrase
+- use websockets to push updates to all listeners
+- when one player gets all card items they win
