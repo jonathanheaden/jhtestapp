@@ -10,6 +10,6 @@ router.get('/players', ctrlPlayers.readplayers);
 router.get('/game/:playerid', ctrlPlayers.readgame);
 router.get('/players', ctrlPlayers.readplayers);
 router.get('/players/:playerid', ctrlPlayers.getplayer);
-router.put('/players/:playername/:phrase', ctrlPlayers.putplayer);
+router.put('/players/:playerid/:phrase', ctrlPlayers.putplayer);
 
 module.exports = router;

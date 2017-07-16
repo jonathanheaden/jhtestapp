@@ -9,15 +9,18 @@ playerstate.put('gameover', false)
 var putplayer = function (req, res) {
     var playerid = req.params.playerid
     var index = req.params.phrase
+    console.log(index)
     if (['0', '1', '2', '3', '4'].includes(index)) {
-        var player = playerstate.get(playerid)
-        player.vals[index] = true
-        if (!player.vals.includes(false)) {
-            if (playerstate.get('winner') != 'No winner!') {
+        var p = playerstate.get(playerid)
+        console.log(p.vals)
+        p.vals[index] = true
+        if (!p.vals.includes(false)) {
+            if (!playerstate.get('gameover')) {
+                playerstate.put('gameover', true)
                 playerstate.put('winner', playerid)
             }
         }
-        playerstate.put(playerid, player)
+        playerstate.put(playerid, p)
         ctrlShared.sendJsonResponse(res, 200, {
             "player": playerstate.get(playerid)
         });
@@ -72,7 +75,7 @@ var readplayers = function (req, res) {
     var response = []
     playerstate.get('players').forEach(function (playerid) {
         var obj = {
-            'name': playerid,
+            'id': playerid,
             'card': playerstate.get(playerid)
         }
         response.push(obj)
