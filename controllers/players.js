@@ -36,13 +36,16 @@ var getplayer = function (req, res) {
     console.log(playerid)
     ctrlShared.sendJsonResponse(res, 200, {
         "player": playerstate.get(playerid),
-        "players": playerstate.get('players')
+        "players": playerstate.get('playernames')
     });
 
 }
 
 var newplayer = function (req, res) {
+    var list = playerstate.get('playernames')
+    console.log(list)
     var playername = req.body.playername
+    console.log('checking ' + playername + ' :' + list.includes(playername) )
     var playerid = getnewplayerid()
     if (!playerstate.gameover) {
         if (playerstate.get('playernames').includes(playername)) {
@@ -58,13 +61,16 @@ var newplayer = function (req, res) {
                 'vals': playervals
             }
             playerstate.put(playerid, playerobj)
-            var playerslist = playerstate.get('players')
-            playerslist.push(playerid)
+            var playerslist = playerstate.get('playernames')
+            var playersidlist = playerstate.get('playerids')
+            playerslist.push(playername)
+            playersidlist.push(playerid)
             console.log(playerslist)
-            playerstate.put('players', playerslist)
+            playerstate.put('playernames', playerslist)
+            playerstate.put('playerids', playersidlist)
             ctrlShared.sendJsonResponse(res, 200, {
-                "numplayers": playerstate.get('players').count,
-                "players": playerstate.get('players'),
+                "numplayers": (playerstate.get('playernames')).length,
+                "players": playerstate.get('playernames'),
             });
         }
     }
@@ -73,7 +79,7 @@ var newplayer = function (req, res) {
 
 var readplayers = function (req, res) {
     var response = []
-    playerstate.get('players').forEach(function (playerid) {
+    playerstate.get('playerids').forEach(function (playerid) {
         var obj = {
             'id': playerid,
             'card': playerstate.get(playerid)
