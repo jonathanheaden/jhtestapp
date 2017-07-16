@@ -1,22 +1,25 @@
 var ctrlShared = require('./shared');
 var playerstate = require('memory-cache');
 playerstate.put('players', [])
+playerstate.put('playernames', [])
 playerstate.put('winner', 'No winner!')
+playerstate.put('playerids',[])
+playerstate.put('gameover', false)
 
 var putplayer = function (req, res) {
-    var playername = req.params.playername
+    var playerid = req.params.playerid
     var index = req.params.phrase
     if (['0', '1', '2', '3', '4'].includes(index)) {
-        var player = playerstate.get(playername)
+        var player = playerstate.get(playerid)
         player.vals[index] = true
         if (!player.vals.includes(false)) {
             if (playerstate.get('winner') != 'No winner!') {
-                playerstate.put('winner', playername)
+                playerstate.put('winner', playerid)
             }
         }
-        playerstate.put(playername, player)
+        playerstate.put(playerid, player)
         ctrlShared.sendJsonResponse(res, 200, {
-            "player": playerstate.get(playername)
+            "player": playerstate.get(playerid)
         });
     } else {
         ctrlShared.sendJsonResponse(res, 405, {
@@ -26,74 +29,84 @@ var putplayer = function (req, res) {
 }
 
 var getplayer = function (req, res) {
-    var playername = req.params.playername
-    console.log(playername)
+    var playerid = req.params.playerid
+    console.log(playerid)
     ctrlShared.sendJsonResponse(res, 200, {
-        "player": playerstate.get(playername),
+        "player": playerstate.get(playerid),
         "players": playerstate.get('players')
     });
 
 }
 
 var newplayer = function (req, res) {
-        var playername = req.body.playername
-        if (playername == 'No winner!') {
+    var playername = req.body.playername
+    var playerid = getnewplayerid()
+    if (!playerstate.gameover) {
+        if (playerstate.get('playernames').includes(playername)) {
             ctrlShared.sendJsonResponse(res, 405, {
-                "message": 'piss off Sean',
+                "message": 'name is already registered',
             })
         } else {
-            if (playerstate.get('players').includes(playername)) {
-                ctrlShared.sendJsonResponse(res, 405, {
-                    "message": 'playername is already registered',
-                })
-            } else {
-                var playervals = [false, false, false, false, false]
-                var playerphrases = getUnique(5)
-                var playerobj = {
-                    'phrases': playerphrases,
-                    'vals': playervals
-                }
-                playerstate.put(playername, playerobj)
-                var playerslist = playerstate.get('players')
-                playerslist.push(playername)
-                console.log(playerslist)
-                playerstate.put('players', playerslist)
-                ctrlShared.sendJsonResponse(res, 200, {
-                    "numplayers": playerstate.get('players').count,
-                    "players": playerstate.get('players'),
-                });
+            var playervals = [false, false, false, false, false]
+            var playerphrases = getUnique(5)
+            var playerobj = {
+                'name': playername,
+                'phrases': playerphrases,
+                'vals': playervals
             }
-        }
-
-        function getUnique(count) {
-
-            var tmp = ctrlShared.thingsthataresaid.slice()
-            var ret = [];
-
-            for (var i = 0; i < count; i++) {
-                var index = Math.floor(Math.random() * tmp.length);
-                var removed = tmp.splice(index, 1);
-                ret.push(removed[0]);
-            }
-            return ret;
-        }
-
-        var readplayers = function (req, res) {
-            var response = []
-            playerstate.get('players').forEach(function (playername) {
-                var obj = {
-                    'name': playername,
-                    'card': playerstate.get(playername)
-                }
-                response.push(obj)
-            }, this);
+            playerstate.put(playerid, playerobj)
+            var playerslist = playerstate.get('players')
+            playerslist.push(playerid)
+            console.log(playerslist)
+            playerstate.put('players', playerslist)
             ctrlShared.sendJsonResponse(res, 200, {
-                "game": "conference call bingo",
-                'players': response
+                "numplayers": playerstate.get('players').count,
+                "players": playerstate.get('players'),
             });
         }
+    }
+}
 
-        module.exports.putplayer = putplayer
-        module.exports.getplayer = getplayer
-        module.exports.newplayer = newplayer
-        module.exports.readplayers = readplayers
+
+var readplayers = function (req, res) {
+    var response = []
+    playerstate.get('players').forEach(function (playerid) {
+        var obj = {
+            'name': playerid,
+            'card': playerstate.get(playerid)
+        }
+        response.push(obj)
+    }, this);
+    ctrlShared.sendJsonResponse(res, 200, {
+        "game": "conference call bingo",
+        'players': response
+    });
+}
+
+// helper functions
+
+function getUnique(count) {
+
+    var tmp = ctrlShared.thingsthataresaid.slice()
+    var ret = [];
+
+    for (var i = 0; i < count; i++) {
+        var index = Math.floor(Math.random() * tmp.length);
+        var removed = tmp.splice(index, 1);
+        ret.push(removed[0]);
+    }
+    return ret;
+}
+
+function getnewplayerid() {
+    var id = ctrlShared.get4char()
+    while ((playerstate.get('playerids').includes(id))) {
+        id = ctrlShared.get4char()    
+    }
+    return id
+}
+
+module.exports.putplayer = putplayer
+module.exports.getplayer = getplayer
+module.exports.newplayer = newplayer
+module.exports.readplayers = readplayers

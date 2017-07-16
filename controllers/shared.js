@@ -15,10 +15,15 @@ var thingsthataresaid = [
     'No it is still loading'
 ];
 
-sendJsonResponse = function (res, status, content) {
+var sendJsonResponse = function (res, status, content) {
     res.status(status);
     res.json(content);
 };
 
+var get4char = function () {
+    return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
+}
+
 module.exports.sendJsonResponse = sendJsonResponse;
-module.exports.thingsthataresaid = thingsthataresaid
+module.exports.thingsthataresaid = thingsthataresaid;
+module.exports.get4char = get4char;
