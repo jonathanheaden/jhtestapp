@@ -29,7 +29,7 @@ const Home = {
     data: function () {
         return {
             playerName: '',
-            playerId: ''
+            playerId: 'x'
         }
     },
     computed: {
@@ -61,19 +61,25 @@ const Home = {
 
         },
         refreshPlayers() {
-            axios.get('http://localhost:3255/api/game/'+ this.playerId)
+            axios.get('http://localhost:3255/api/game/' + this.playerId)
                 .then(response => {
                     store.commit('setPlayers', response.data.players)
                 })
                 .catch(error => {
                     console.log('There was an error: ' + error.message)
                 })
+        },
+        PlayerRefreshLoop() {
+            var self = this
+            this.refreshPlayers()
+            setTimeout(function () {
+                self.PlayerRefreshLoop()
+            }, 5000);
         }
     },
-    created() {
-
+    created: function () {
+        this.PlayerRefreshLoop();
     }
-
 }
 
 const store = new Vuex.Store({
