@@ -6,3 +6,25 @@ body {
 a {
   color: #00B7FF;
 }
+
+.navbar {
+  width: 100%;
+  display: inline-flex;
+  padding: 14px 16px;
+  font-size: 17px;
+  text-decoration: none;
+  background: aliceblue
+}
+
+.navbar li:hover{
+ 
+}
+
+ul.navbar.player li:hover {
+  background-color: #c0ffee;
+  color: goldenrod
+}
+.navbar li{
+  padding: 15px 15px;
+  list-style: none
+}
