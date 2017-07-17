@@ -13,7 +13,7 @@ var http = require('http');
  */
 
 var port = normalizePort(process.env.PORT || '3255');
-var siteURL = (process.env.siteURL || 'http://localhost:' + port)
+var siteURL = (process.env.URL || 'http://localhost:' + port)
 app.set('port', port);
 app.set('siteURL',siteURL)
 
