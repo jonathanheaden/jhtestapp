@@ -1,7 +1,15 @@
 # jhtestapp
 
-test node/express app for azure web
- - setup as express generator boilerplate
+## API Endpoints
+
+| Verb | url  | Params  | 
+|---|--:|---|
+| get  |/api   | none  | 
+| get  |/api/game   | none  |  
+| get  | /api/game/:playerid   | 4 digit playerid of current player   | 
+| get  | /api/players/:playerid   |4 digit playerid of current player   | 
+| put  | /api/players/:playerid/:phrase   | 4 digit playerid of current player & index of phrase which is being ticked  | 
+| post  | /api/users  | request body contains `playername`  | 
 
  ``` powershell
 $game = (invoke-webrequest 'http://localhost:3255/api/game').content | convertfrom-json
