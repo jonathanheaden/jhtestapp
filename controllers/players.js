@@ -75,7 +75,7 @@ var newplayer = function (req, res) {
 var readgame = function (req, res) {
     var response = []
     var id = req.params.playerid
-    if (req.params.playerid) { id = '007' }
+    if (!req.params.playerid) { id = '007' }
     playerstate.get('playerids').forEach(function (playerid) {
         
         var playercard = playerstate.get(playerid)
