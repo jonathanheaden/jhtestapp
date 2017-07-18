@@ -5,18 +5,14 @@ const Home = {
     <div class="user">
     <h1> Bingo Game</h1>
         <h3>Your player</h3>
+        <ul class="navbar player" v-show="playerjoined">
+        <li>{{thisplayer.name}}</li>
+            <li v-for="(item, index) in thisplayer.card"><button v-on:click="gotPhrase(index)">{{item}}</button></li>
+        </ul>   
          <ul class="navbar" v-for="player in players">       
                 <li class="playername">{{player.name}}</li>
                 <li v-for="phrase in player.card" class="cardphrase">{{phrase}}</li>
         </ul>
-        <ul class="navbar player">
-        <li>Name</li>
-            <li><button v-on:click="gotPhrase(0)">Phrase 1</button></li>
-            <li><button v-on:click="gotPhrase(1)">This is quite a long Phrase so may need wrapping</button></li>
-            <li><button v-on:click="gotPhrase(2)">Phrase 3</button></li>
-            <li><button v-on:click="gotPhrase(3)">Phrase 4</button></li>
-            <li><button v-on:click="gotPhrase(4)">Phrase 5</button></li>
-        </ul>   
         <form @submit.prevent="createPlayer" v-show="showNewPlayerForm">
         <fieldset>
             <legend>New Player</legend>
@@ -29,23 +25,35 @@ const Home = {
     data: function () {
         return {
             playerName: '',
-            playerId: 'x'
+            player: store.state.thisplayer
         }
     },
     computed: {
-        players() {
-            return store.state.players
-        },
         showNewPlayerForm() {
             return (store.state.players.length < 6) && (store.state.playerid == '007')
         },
-        player() {
-            return
+        playerjoined(){
+            return (store.state.playerid != '007')
         },
-        baseURL(){
-            return store.state.siteURL
+        players(){
+            var oplayers = []
+            store.state.players.forEach(function (item, index, array) {
+                if (item.playerid != store.state.playerid) {oplayers.push(item)}
+            })
+            return oplayers 
+        },
+        thisplayer(){
+            var p = {
+                name: '',
+                card: []
+            }
+             store.state.players.forEach(function (item, index, array) {        
+                if (item.playerid == store.state.playerid) {
+                    p = item
+                }
+            })
+            return p
         }
-
     },
     methods: {
         createPlayer() {
@@ -62,7 +70,14 @@ const Home = {
                 })
         },
         gotPhrase(id) {
-
+             // /players/:playerid/:phrase
+             axios.put(store.state.siteUrl + 'api/players/' + store.state.playerid + '/' + id)
+             .then(response => {
+                this.refreshPlayers()
+             })
+             .catch(error => {
+                    console.log('There was an error: ' + error.message)
+                })
         },
         refreshPlayers() {
             axios.get(store.state.siteUrl + 'api/game/' + store.state.playerid)
@@ -131,7 +146,6 @@ new Vue({
         }
     },
     created() {
-        console.log(store.state.siteUrl)
         axios.get(store.state.siteUrl+'api/game/007')
             .then(response => {
                 store.commit('setPlayers', response.data.players)
