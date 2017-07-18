@@ -46,7 +46,7 @@ const Home = {
     },
     methods: {
         createPlayer() {
-            axios.post('http://localhost:3255/api/users', {
+            axios.post(store.state.siteURL +'api/users', {
                     playername: this.playerName
                 })
                 .then(response => {
@@ -61,7 +61,7 @@ const Home = {
 
         },
         refreshPlayers() {
-            axios.get('http://localhost:3255/api/game/' + this.playerId)
+            axios.get(store.state.siteURL + 'api/game/' + this.playerId)
                 .then(response => {
                     store.commit('setPlayers', response.data.players)
                 })
@@ -87,7 +87,8 @@ const store = new Vuex.Store({
         players: [],
         playerid: undefined,
         winner: undefined,
-        gameOver: false
+        gameOver: false,
+        siteUrl: this.document.URL
     },
     mutations: {
         setPlayers(state, resultingplayers) {
@@ -126,7 +127,7 @@ new Vue({
         }
     },
     created() {
-        axios.get('http://localhost:3255/api/game/nonplayer')
+        axios.get(store.state.siteURL +'api/game/nonplayer')
             .then(response => {
                 store.commit('setPlayers', response.data.players)
             })
