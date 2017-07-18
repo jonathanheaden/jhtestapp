@@ -8,24 +8,33 @@ playerstate.put('gameover', false)
 
 var putplayer = function (req, res) {
     var playerid = req.params.playerid
-    var index = req.params.phrase
-    if (['0', '1', '2', '3', '4'].includes(index)) {
-        var p = playerstate.get(playerid)
-        p.vals[index] = true
-        if (!p.vals.includes(false)) {
-            if (!playerstate.get('gameover')) {
-                playerstate.put('gameover', true)
-                playerstate.put('winner', playerid)
-            }
-        }
-        playerstate.put(playerid, p)
-        ctrlShared.sendJsonResponse(res, 200, {
-            "player": playerstate.get(playerid)
-        });
+    if (playerstate.get('gameover')) {
+        ctrlShared.sendJsonResponse(res, 201,{
+            'gamestatus': 'Game Over',
+            'winner': (playerstate.get('winner'))
+        })
     } else {
-        ctrlShared.sendJsonResponse(res, 405, {
-            "message": 'index out of bounds.'
-        });
+        var index = req.params.phrase
+        if (['0', '1', '2', '3', '4'].includes(index)) {
+            var p = playerstate.get(playerid)
+            p.vals[index] = true
+            if (!p.vals.includes(false)) {
+                if (!playerstate.get('gameover')) {
+                    playerstate.put('gameover', true)
+                    playerstate.put('winner', p.name)
+                }
+            }
+            playerstate.put(playerid, p)
+            ctrlShared.sendJsonResponse(res, 200, {
+                "player": playerstate.get(playerid),
+                'gamestatus': playerstate.get('gameover') ? 'Game Over' : 'Game On',
+                'winner': (playerstate.get('winner'))
+            });
+        } else {
+            ctrlShared.sendJsonResponse(res, 405, {
+                "message": 'index out of bounds.'
+            });
+        }
     }
 }
 
