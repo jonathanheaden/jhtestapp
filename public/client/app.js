@@ -41,15 +41,19 @@ const Home = {
         },
         player() {
             return
+        },
+        baseURL(){
+            return store.state.siteURL
         }
 
     },
     methods: {
         createPlayer() {
-            axios.post(store.state.siteURL +'api/users', {
+            axios.post(store.state.siteUrl +'api/users', {
                     playername: this.playerName
                 })
                 .then(response => {
+                    store.commit('setPlayerid', response.data.id)
                     this.playerId = response.data.id
                     this.refreshPlayers()
                 })
@@ -61,7 +65,7 @@ const Home = {
 
         },
         refreshPlayers() {
-            axios.get(store.state.siteURL + 'api/game/' + this.playerId)
+            axios.get(store.state.siteUrl + 'api/game/' + store.state.playerid)
                 .then(response => {
                     store.commit('setPlayers', response.data.players)
                 })
@@ -93,17 +97,17 @@ const store = new Vuex.Store({
     mutations: {
         setPlayers(state, resultingplayers) {
             state.players = resultingplayers
+        },
+        setPlayerid(state, item) {
+            state.playerid = item
+        },
+        setWinner(state, item) {
+            state.winner = item
+        },
+        setGameOver(state) {
+            state.gameOver = true
         }
-    },
-    setPlayerid(state, item) {
-        state.playerid = item
-    },
-    setWinner(state, item) {
-        state.winner = item
-    },
-    setGameOver(state) {
-        state.gameOver = true
-    },
+    }
 })
 
 const router = new VueRouter({
@@ -127,7 +131,8 @@ new Vue({
         }
     },
     created() {
-        axios.get(store.state.siteURL +'api/game/nonplayer')
+        console.log(store.state.siteUrl)
+        axios.get(store.state.siteUrl+'api/game/007')
             .then(response => {
                 store.commit('setPlayers', response.data.players)
             })
