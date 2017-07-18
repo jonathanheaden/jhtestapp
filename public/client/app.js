@@ -9,11 +9,11 @@ const Home = {
         <ul>
             <li v-for="(item, index) in thisplayer.card" v-show="thisplayer.vals[index]">{{item}}</li>
         </ul>
-        <ul class="navbar player" v-show="playerjoined">
+        <ul class="bingocard player" v-show="playerjoined">
             <li>{{thisplayer.name}}</li>
             <li v-for="(item, index) in thisplayer.card"><button v-on:click="gotPhrase(index)" v-show="!(thisplayer.vals[index])">{{item}}</button></li>
         </ul>   
-         <ul class="navbar" v-for="player in players">       
+         <ul class="bingocard" v-for="player in players">       
                 <li class="playername">{{player.name}}</li>
                 <li v-for="phrase in player.card" class="cardphrase">{{phrase}}</li>
         </ul>

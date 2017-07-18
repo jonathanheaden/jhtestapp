@@ -7,7 +7,7 @@ a {
   color: #00B7FF;
 }
 
-.navbar {
+.bingocard {
   width: 100%;
   display: inline-flex;
   padding: 14px 16px;
@@ -16,15 +16,15 @@ a {
   background: aliceblue
 }
 
-.navbar li:hover{
+.bingocard li:hover{
  
 }
 
-ul.navbar.player li:hover {
+ul.bingocard.player li:hover {
   background-color: #c0ffee;
   color: goldenrod
 }
-.navbar li{
+.bingocard li{
   padding: 15px 15px;
   list-style: none
 }
