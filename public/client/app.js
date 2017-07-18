@@ -5,9 +5,12 @@ const Home = {
     <div class="user">
     <h1> Bingo Game</h1>
         <h3>Your player</h3>
+        <ul>
+            <li v-for="(item, index) in thisplayer.card" v-show="thisplayer.vals[index]">{{item}}</li>
+        </ul>
         <ul class="navbar player" v-show="playerjoined">
-        <li>{{thisplayer.name}}</li>
-            <li v-for="(item, index) in thisplayer.card"><button v-on:click="gotPhrase(index)">{{item}}</button></li>
+            <li>{{thisplayer.name}}</li>
+            <li v-for="(item, index) in thisplayer.card"><button v-on:click="gotPhrase(index)" v-show="!(thisplayer.vals[index])">{{item}}</button></li>
         </ul>   
          <ul class="navbar" v-for="player in players">       
                 <li class="playername">{{player.name}}</li>
