@@ -85,7 +85,7 @@ const Home = {
 const store = new Vuex.Store({
     state: {
         players: [],
-        playerid: undefined,
+        playerid: '007',
         winner: undefined,
         gameOver: false,
         siteUrl: this.document.URL
