@@ -82,10 +82,12 @@ var readgame = function (req, res) {
         if (playerid == id) { // put all the phrases into the response
             var obj = {
                 'name': playercard.name,
-                'card': playercard.phrases
+                'playerid':playerid,
+                'card': playercard.phrases,
+                'vals':playercard.vals
             }
         } else  {
-            var playervals = [];
+            var playerphrases = [];
             for (var i = 0; i < 5; i++) {
                 var element
                 if (playercard.vals[i]) {
@@ -93,11 +95,13 @@ var readgame = function (req, res) {
                 } else {
                     element = '???'
                 }
-                playervals.push(element)                
+                playerphrases.push(element)                
             }
             var obj = {
                 'name': playercard.name,
-                'card': playervals
+                'playerid':playerid,
+                'card': playerphrases,
+                'vals': playercard.vals,
             }
         }
 
