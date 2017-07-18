@@ -17,7 +17,7 @@ const Home = {
             <li><button v-on:click="gotPhrase(3)">Phrase 4</button></li>
             <li><button v-on:click="gotPhrase(4)">Phrase 5</button></li>
         </ul>   
-        <form @submit.prevent="createPlayer" v-show="roomForMorePlayers">
+        <form @submit.prevent="createPlayer" v-show="showNewPlayerForm">
         <fieldset>
             <legend>New Player</legend>
             <label>Name</label><input type="text" required v-model="playerName"> 
@@ -36,8 +36,8 @@ const Home = {
         players() {
             return store.state.players
         },
-        roomForMorePlayers() {
-            return store.state.players.length < 6
+        showNewPlayerForm() {
+            return (store.state.players.length < 6) && (store.state.playerid == '007')
         },
         player() {
             return
