@@ -4,6 +4,7 @@ const Home = {
     template: `
     <div class="user">
     <h1> Bingo Game</h1>
+        <h2 v-show="gameOver.status">Winner is {{gameOver.winner}}</h2>
         <h3>Your player</h3>
         <ul>
             <li v-for="(item, index) in thisplayer.card" v-show="thisplayer.vals[index]">{{item}}</li>
@@ -28,7 +29,8 @@ const Home = {
     data: function () {
         return {
             playerName: '',
-            player: store.state.thisplayer
+            player: store.state.thisplayer,
+            winner: store.state.winner
         }
     },
     computed: {
@@ -37,6 +39,12 @@ const Home = {
         },
         playerjoined(){
             return (store.state.playerid != '007')
+        },
+        gameOver() {
+            return {
+                status: store.state.gameOver,
+                winner: store.state.winner
+            }
         },
         players(){
             var oplayers = []
@@ -73,14 +81,18 @@ const Home = {
                 })
         },
         gotPhrase(id) {
-             // /players/:playerid/:phrase
-             axios.put(store.state.siteUrl + 'api/players/' + store.state.playerid + '/' + id)
-             .then(response => {
-                this.refreshPlayers()
-             })
-             .catch(error => {
-                    console.log('There was an error: ' + error.message)
-                })
+             if (!store.state.gameOver) {
+                axios.put(store.state.siteUrl + 'api/players/' + store.state.playerid + '/' + id)
+                    .then(response => {
+                        this.refreshPlayers()
+                        if (response.data.gamestatus == 'Game Over') {
+                            store.commit('setWinner', response.data.winner)
+                        }
+                    })
+                    .catch(error => {
+                        console.log('There was an error: ' + error.message)
+                    })
+             }
         },
         refreshPlayers() {
             axios.get(store.state.siteUrl + 'api/game/' + store.state.playerid)
@@ -93,7 +105,7 @@ const Home = {
         },
         PlayerRefreshLoop() {
             var self = this
-            this.refreshPlayers()
+             if (!store.state.gameOver) { this.refreshPlayers() }
             setTimeout(function () {
                 self.PlayerRefreshLoop()
             }, 5000);
@@ -119,12 +131,11 @@ const store = new Vuex.Store({
         setPlayerid(state, item) {
             state.playerid = item
         },
-        setWinner(state, item) {
-            state.winner = item
-        },
-        setGameOver(state) {
+        setWinner(state, name) {
+            state.winner = name
             state.gameOver = true
-        }
+            // need to send the winner details to the api
+        } 
     }
 })
 
