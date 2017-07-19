@@ -5,6 +5,6 @@ var player = require('../controllers/players')
 
 
 /* GET users listing. */
-router.post('/', player.newplayer);
+router.post('/:gameid', player.newplayer);
 
 module.exports = router;

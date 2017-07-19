@@ -18,14 +18,12 @@ var landing = function (req, res) {
     })
 }
 
-var newgame = function(req,res){
-    var description = req.body.description.substring(0,140)
+var newgame = function (req, res) {
+    var description = req.body.description.substring(0, 140)
     var games = playerstate.get('games')
-    console.log(games)
     var gameids = []
     if (games.length >= 1) {
-        console.log(games.length)
-        games.array.forEach(function (element) {
+        games.forEach(function (element) {
             gameids.push(element.id)
         }, this);
     }
@@ -35,17 +33,16 @@ var newgame = function(req,res){
         description: description,
         players: [],
         playernames: [],
-        playerids:[],
+        playerids: [],
         winner: 'No Winner!',
         gameover: false
     }
-    console.log(newgame)
     games.push(newgame)
     playerstate.put('games', games)
     ctrlShared.sendJsonResponse(res, 200, {
-                "id": gameid,
-                "description": description
-            });
+        "id": gameid,
+        "description": description
+    });
 }
 
 var newplayer = function (req, res) {
@@ -54,7 +51,7 @@ var newplayer = function (req, res) {
     var games = playerstate.get('games')
     var newGames = []
     var game
-    games.array.forEach(function(element) {
+    games.forEach(function (element) {
         if (element.id == gameid) {
             game = element
         } else {
@@ -78,12 +75,13 @@ var newplayer = function (req, res) {
                 'vals': playervals
             }
             game.players.push(playerobj)
-            game.playerslist.push(playername)
-            game.playersidlist.push(playerid)
-            newGames.push(newgame)
-            playerstate.put('games',newGames)
+            game.playernames.push(playername)
+            game.playerids.push(playerid)
+            newGames.push(game)
+            playerstate.put('games', newGames)
             ctrlShared.sendJsonResponse(res, 200, {
-                "id": playerid,
+                "playerid": playerid,
+                "gameid": game.id,
                 "numplayers": game.playernames.length,
                 "players": game.playernames
             });
@@ -93,79 +91,115 @@ var newplayer = function (req, res) {
 
 
 var readgame = function (req, res) {
-    var response = []
+    var gameid = req.params.gameid
     var id = req.params.playerid
     if (!req.params.playerid) {
         id = '007'
     }
-    playerstate.get('playerids').forEach(function (playerid) {
-
-        var playercard = playerstate.get(playerid)
-        if (playerid == id) {
-            var obj = {
-                'name': playercard.name,
-                'playerid': playerid,
-                'card': playercard.phrases,
-                'vals': playercard.vals
-            }
-        } else {
-            var playerphrases = [];
-            for (var i = 0; i < 5; i++) {
-                var element
-                if (playercard.vals[i]) {
-                    element = playercard.phrases[i];
-                } else {
-                    element = '???'
+    if (!req.params.gameid) {
+        gameid = 'spy'
+    }
+    var response = []
+    var game = getgame(gameid)
+    if (!game) {
+        ctrlShared.sendJsonResponse(res, 401, {
+            "message": "game not found"
+        });
+    } else {
+        game.players.forEach(function (player) {
+            if (player.id == id) {
+                var obj = player
+            } else {
+                var playerphrases = [];
+                for (var i = 0; i < 5; i++) {
+                    var element
+                    if (player.vals[i]) {
+                        element = player.phrases[i];
+                    } else {
+                        element = '???'
+                    }
+                    playerphrases.push(element)
                 }
-                playerphrases.push(element)
+                var obj = {
+                    'name': player.name,
+                    'playerid': player.id,
+                    'card': playerphrases,
+                    'vals': player.vals,
+                }
             }
-            var obj = {
-                'name': playercard.name,
-                'playerid': playerid,
-                'card': playerphrases,
-                'vals': playercard.vals,
-            }
-        }
 
-        response.push(obj)
-    }, this);
-    ctrlShared.sendJsonResponse(res, 200, {
-        "game": "conference call bingo",
-        'players': response
-    });
+            response.push(obj)
+        }, this);
+        ctrlShared.sendJsonResponse(res, 200, {
+            "game": "conference call bingo",
+            'players': response
+        });
+    }
 }
 
 var putplayer = function (req, res) {
+    var gameid = req.params.gameid
     var playerid = req.params.playerid
-    if (playerstate.get('gameover')) {
-        ctrlShared.sendJsonResponse(res, 201, {
-            'gamestatus': 'Game Over',
-            'winner': (playerstate.get('winner'))
-        })
-    } else {
-        var index = req.params.phrase
-        if (['0', '1', '2', '3', '4'].includes(index)) {
-            var p = playerstate.get(playerid)
-            p.vals[index] = true
-            if (!p.vals.includes(false)) {
-                if (!playerstate.get('gameover')) {
-                    playerstate.put('gameover', true)
-                    playerstate.put('winner', p.name)
-                }
-            }
-            playerstate.put(playerid, p)
-            ctrlShared.sendJsonResponse(res, 200, {
-                "player": playerstate.get(playerid),
-                'gamestatus': playerstate.get('gameover') ? 'Game Over' : 'Game On',
-                'winner': (playerstate.get('winner'))
-            });
+    var phraseid = req.params.phraseid
+    var newGames = []
+    var games = playerstate.get('games')
+    var game
+
+    games.forEach(function (element) {
+        if (element.id == gameid) {
+            game = element
         } else {
-            ctrlShared.sendJsonResponse(res, 405, {
-                "message": 'index out of bounds.'
-            });
+            newGames.push(element)
+        }
+    }, this);
+    if (!game) {
+        ctrlShared.sendJsonResponse(res, 401, {
+            "message": "game not found"
+        });
+    } else {
+        if (game.gameover) {
+            ctrlShared.sendJsonResponse(res, 201, {
+                'gamestatus': 'Game Over',
+                'winner': (game.winner)
+            })
+        } else {
+            if (['0', '1', '2', '3', '4'].includes(phraseid)) {
+                 console.log(game)
+                var p = getplayeringame(playerid,game)
+                p.vals[phraseid] = true
+                if (!p.vals.includes(false)) {
+                    if (!playerstate.get('gameover')) {
+                        playerstate.put('gameover', true)
+                        playerstate.put('winner', p.name)
+                    }
+                }
+                var newstateofplayers = []
+                console.log('game ')
+                console.log(game)
+                game.players.foreach(function(plyr){
+                    if (!plyr.playerid == playerid){
+                        newstateofplayers.push(plyr)
+                    } else {
+                        newstateofplayers.push(p)
+                    }
+                })
+                game.players = newstateofplayers
+                newGames.push(game)
+                playerstate.put('games', newGames)
+                ctrlShared.sendJsonResponse(res, 200, {
+                    "player": playerstate.get(playerid),
+                    'gamestatus': playerstate.get('gameover') ? 'Game Over' : 'Game On',
+                    'winner': (playerstate.get('winner'))
+                });
+            } else {
+                ctrlShared.sendJsonResponse(res, 405, {
+                    "message": 'index out of bounds.'
+                });
+            }
         }
     }
 }
+
 // helper functions
 
 function getUnique(count) {
@@ -186,6 +220,29 @@ function getnewid(currentIDs) {
         id = ctrlShared.get4char()
     }
     return id
+}
+
+function getgame(id) {
+    var game
+    playerstate.get('games').forEach(function (element) {
+        if (element.id == id) {
+            game = element
+        }
+    }, this);
+    return game
+}
+function getplayeringame(id, game){
+    console.log(id)
+    console.log(game)
+    var player
+    game.players.forEach(function(p){
+        console.log(p)
+        if (p.id == id) { /// JUst changed this <----
+            console.log('found')
+            player = p
+        }
+    })
+    return player
 }
 
 module.exports.landing = landing

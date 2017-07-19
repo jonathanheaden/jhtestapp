@@ -8,7 +8,6 @@ router.get('/', ctrlPlayers.landing);
 router.get('/:gameid/', ctrlPlayers.readgame);
 router.get('/:gameid/:playerid', ctrlPlayers.readgame);
 router.post('/',ctrlPlayers.newgame);
-//router.get('/players/:playerid', ctrlPlayers.getplayer);
-router.put('/players/:playerid/:phrase', ctrlPlayers.putplayer);
+router.put('/:gameid/:playerid/:phraseid', ctrlPlayers.putplayer);
 
 module.exports = router;
