@@ -4,12 +4,12 @@
 
 | Verb | url  | Params  |  Return |
 |---|--:|---|---|
-| get  |/api   | none  | Landing page (not used) | 
-| get  |/api/game   | none  |  Home page for no selected player |
-| get  | /api/game/:playerid   | 4 digit playerid of current player   | Home page for selected Player |
-| get  | /api/players/:playerid   |4 digit playerid of current player   |  Get card for selected Player (not used) |
-| put  | /api/players/:playerid/:phrase   | 4 digit playerid of current player & index of phrase which is being ticked  | Mark a card as done |
-| post  | /api/users  | request body contains `playername`  | create a new player |
+| get | /api | none | returns a list of games with their desciptions and IDs |
+| get  | /api/:gameid   | none  |  Home page for specified game for no selected player |
+| get  | /api/:gameid/:playerid   | 4 digit playerid of current player   | Home page for selected Player in specified game |
+| put  | /api/players/:game/:playerid/:phrase   | 4 digit playerid of current player  in sepcified game & index of phrase which is being ticked | Mark a card as done for a player in a game |
+| post | /api/users/:game  | request body contains `playername`  | create a new player in a specified game |
+| post | /api | request body contains a description | create a new game |
 
  ``` powershell
 $game = (invoke-webrequest 'http://localhost:3255/api/game').content | convertfrom-json
