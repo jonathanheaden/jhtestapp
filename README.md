@@ -2,14 +2,14 @@
 
 ## API Endpoints
 
-| Verb | url  | Params  | 
-|---|--:|---|
-| get  |/api   | none  | 
-| get  |/api/game   | none  |  
-| get  | /api/game/:playerid   | 4 digit playerid of current player   | 
-| get  | /api/players/:playerid   |4 digit playerid of current player   | 
-| put  | /api/players/:playerid/:phrase   | 4 digit playerid of current player & index of phrase which is being ticked  | 
-| post  | /api/users  | request body contains `playername`  | 
+| Verb | url  | Params  |  Return |
+|---|--:|---|---|
+| get  |/api   | none  | Landing page (not used) | 
+| get  |/api/game   | none  |  Home page for no selected player |
+| get  | /api/game/:playerid   | 4 digit playerid of current player   | Home page for selected Player |
+| get  | /api/players/:playerid   |4 digit playerid of current player   |  Get card for selected Player (not used) |
+| put  | /api/players/:playerid/:phrase   | 4 digit playerid of current player & index of phrase which is being ticked  | Mark a card as done |
+| post  | /api/users  | request body contains `playername`  | create a new player |
 
  ``` powershell
 $game = (invoke-webrequest 'http://localhost:3255/api/game').content | convertfrom-json
