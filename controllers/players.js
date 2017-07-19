@@ -1,15 +1,144 @@
 var ctrlShared = require('./shared');
 var playerstate = require('memory-cache');
-playerstate.put('players', [])
-playerstate.put('playernames', [])
-playerstate.put('winner', 'No winner!')
-playerstate.put('playerids',[])
-playerstate.put('gameover', false)
+
+playerstate.put('games', [])
+
+
+var landing = function (req, res) {
+    var games = []
+    playerstate.get('games').forEach(function (element) {
+        var item = {
+            description: element.description,
+            id: element.id
+        }
+        games.push(item)
+    }, this);
+    ctrlShared.sendJsonResponse(res, 201, {
+        'games': games
+    })
+}
+
+var newgame = function(req,res){
+    var description = req.body.description.substring(0,140)
+    var games = playerstate.get('games')
+    console.log(games)
+    var gameids = []
+    if (games.length >= 1) {
+        console.log(games.length)
+        games.array.forEach(function (element) {
+            gameids.push(element.id)
+        }, this);
+    }
+    var gameid = getnewid(gameids)
+    var newgame = {
+        id: gameid,
+        description: description,
+        players: [],
+        playernames: [],
+        playerids:[],
+        winner: 'No Winner!',
+        gameover: false
+    }
+    console.log(newgame)
+    games.push(newgame)
+    playerstate.put('games', games)
+    ctrlShared.sendJsonResponse(res, 200, {
+                "id": gameid,
+                "description": description
+            });
+}
+
+var newplayer = function (req, res) {
+    var playername = req.body.playername
+    var gameid = req.params.gameid
+    var games = playerstate.get('games')
+    var newGames = []
+    var game
+    games.array.forEach(function(element) {
+        if (element.id == gameid) {
+            game = element
+        } else {
+            newGames.push(element)
+        }
+    }, this);
+    var list = game.playernames
+    var playerid = getnewid(game.playerids)
+    if (!game.gameover) {
+        if (game.playernames.includes(playername)) {
+            ctrlShared.sendJsonResponse(res, 405, {
+                "message": 'name is already registered',
+            })
+        } else {
+            var playervals = [false, false, false, false, false]
+            var playerphrases = getUnique(5)
+            var playerobj = {
+                'id': playerid,
+                'name': playername,
+                'phrases': playerphrases,
+                'vals': playervals
+            }
+            game.players.push(playerobj)
+            game.playerslist.push(playername)
+            game.playersidlist.push(playerid)
+            newGames.push(newgame)
+            playerstate.put('games',newGames)
+            ctrlShared.sendJsonResponse(res, 200, {
+                "id": playerid,
+                "numplayers": game.playernames.length,
+                "players": game.playernames
+            });
+        }
+    }
+}
+
+
+var readgame = function (req, res) {
+    var response = []
+    var id = req.params.playerid
+    if (!req.params.playerid) {
+        id = '007'
+    }
+    playerstate.get('playerids').forEach(function (playerid) {
+
+        var playercard = playerstate.get(playerid)
+        if (playerid == id) {
+            var obj = {
+                'name': playercard.name,
+                'playerid': playerid,
+                'card': playercard.phrases,
+                'vals': playercard.vals
+            }
+        } else {
+            var playerphrases = [];
+            for (var i = 0; i < 5; i++) {
+                var element
+                if (playercard.vals[i]) {
+                    element = playercard.phrases[i];
+                } else {
+                    element = '???'
+                }
+                playerphrases.push(element)
+            }
+            var obj = {
+                'name': playercard.name,
+                'playerid': playerid,
+                'card': playerphrases,
+                'vals': playercard.vals,
+            }
+        }
+
+        response.push(obj)
+    }, this);
+    ctrlShared.sendJsonResponse(res, 200, {
+        "game": "conference call bingo",
+        'players': response
+    });
+}
 
 var putplayer = function (req, res) {
     var playerid = req.params.playerid
     if (playerstate.get('gameover')) {
-        ctrlShared.sendJsonResponse(res, 201,{
+        ctrlShared.sendJsonResponse(res, 201, {
             'gamestatus': 'Game Over',
             'winner': (playerstate.get('winner'))
         })
@@ -37,98 +166,12 @@ var putplayer = function (req, res) {
         }
     }
 }
-
-var getplayer = function (req, res) {
-    var playerid = req.params.playerid
-    ctrlShared.sendJsonResponse(res, 200, {
-        "player": playerstate.get(playerid),
-        "players": playerstate.get('playernames')
-    });
-
-}
-
-var newplayer = function (req, res) {
-    var list = playerstate.get('playernames')
-    var playername = req.body.playername
-    var playerid = getnewplayerid()
-    if (!playerstate.gameover) {
-        if (playerstate.get('playernames').includes(playername)) {
-            ctrlShared.sendJsonResponse(res, 405, {
-                "message": 'name is already registered',
-            })
-        } else {
-            var playervals = [false, false, false, false, false]
-            var playerphrases = getUnique(5)
-            var playerobj = {
-                'name': playername,
-                'phrases': playerphrases,
-                'vals': playervals
-            }
-            playerstate.put(playerid, playerobj)
-            var playerslist = playerstate.get('playernames')
-            var playersidlist = playerstate.get('playerids')
-            playerslist.push(playername)
-            playersidlist.push(playerid)
-            playerstate.put('playernames', playerslist)
-            playerstate.put('playerids', playersidlist)
-            ctrlShared.sendJsonResponse(res, 200, {
-                "id": playerid,
-                "numplayers": (playerstate.get('playernames')).length,
-                "players": playerstate.get('playernames'),
-            });
-        }
-    }
-}
-
-
-var readgame = function (req, res) {
-    var response = []
-    var id = req.params.playerid
-    if (!req.params.playerid) { id = '007' }
-    playerstate.get('playerids').forEach(function (playerid) {
-        
-        var playercard = playerstate.get(playerid)
-        if (playerid == id) { // put all the phrases into the response
-            var obj = {
-                'name': playercard.name,
-                'playerid':playerid,
-                'card': playercard.phrases,
-                'vals':playercard.vals
-            }
-        } else  {
-            var playerphrases = [];
-            for (var i = 0; i < 5; i++) {
-                var element
-                if (playercard.vals[i]) {
-                    element = playercard.phrases[i];
-                } else {
-                    element = '???'
-                }
-                playerphrases.push(element)                
-            }
-            var obj = {
-                'name': playercard.name,
-                'playerid':playerid,
-                'card': playerphrases,
-                'vals': playercard.vals,
-            }
-        }
-
-        response.push(obj)
-    }, this);
-    ctrlShared.sendJsonResponse(res, 200, {
-        "game": "conference call bingo",
-        'players': response
-    });
-}
-
 // helper functions
 
 function getUnique(count) {
 
     var tmp = ctrlShared.thingsthataresaid.slice()
     var ret = [];
-
     for (var i = 0; i < count; i++) {
         var index = Math.floor(Math.random() * tmp.length);
         var removed = tmp.splice(index, 1);
@@ -137,16 +180,18 @@ function getUnique(count) {
     return ret;
 }
 
-function getnewplayerid() {
+function getnewid(currentIDs) {
     var id = ctrlShared.get4char()
-    while ((playerstate.get('playerids').includes(id))) {
-        id = ctrlShared.get4char()    
+    while (currentIDs.includes(id)) {
+        id = ctrlShared.get4char()
     }
     return id
 }
 
+module.exports.landing = landing
 module.exports.putplayer = putplayer
-module.exports.getplayer = getplayer
+//module.exports.getplayer = getplayer
 module.exports.newplayer = newplayer
+module.exports.newgame = newgame
 // module.exports.readplayers = readplayers
 module.exports.readgame = readgame
