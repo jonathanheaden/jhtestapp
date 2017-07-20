@@ -37,7 +37,9 @@ const Home = {
                     <option v-for="(item, index) in gameslist" :value=item.id :selected="(gameselection == 'item.id')">{{item.description}}</option>
                 </select>
                 </td>
-                <td><button v-on:click="createPlayer()" v-show="areThereGamesInProgress">Join Game</button></td></tr>
+                    <td><button v-on:click="createPlayer()" v-show="gamePlacesAvailable">Join Game</button></td>
+                    <td v-show="gamePlacesAvailable">Game is Full :(</td>
+                </tr>
             </table>
         </fieldset>
         </form>
@@ -46,23 +48,45 @@ const Home = {
     data: function () {
         return {
             playerName: '',
-            gameselection: '',
-            gameDescription:'',
+            gameselection: undefined,
+            gameDescription: '',
             player: '',
             winner: ''
         }
     },
     computed: {
-        gameslist(){
-            return store.state.games
+        gameslist() {
+            result = []
+            if (store.state.games) {
+                store.state.games.map(game => {
+                    if (game.gameon) {
+                        result.push({
+                            description: game.description,
+                            id: game.id
+                        })
+                    }
+                })
+            }
+            return result
         },
         areThereGamesInProgress() {
-            return store.state.games.length > 0
+            return this.gameslist.length > 0
         },
         showNewPlayerForm() {
-            return (store.state.players.length < 6) && (store.state.playerid == '007')
+            var result = false
+            if (this.gameselection) {
+                store.state.games.map(game => {
+                    if (game.id == this.gameselection) {
+                        result = (game.players && game.players.length < 6)
+                    }
+                })
+            }
+            return result
         },
-        playerjoined(){
+        gamePlacesAvailable(){
+            return (this.areThereGamesInProgress && this.showNewPlayerForm)
+        },
+        playerjoined() {
             return (store.state.playerid != '007')
         },
         gameOver() {
@@ -85,7 +109,7 @@ const Home = {
             }
             return oplayers
         },
-        thisplayer(){
+        thisplayer() {
             var p = {
                 name: '',
                 card: []
@@ -95,19 +119,19 @@ const Home = {
             //         p = item
             //     }
             // })
-           if (store.state.gameid) {
-               store.state.players.map(plyr => {
-                   if (plyr.playerid == store.state.playerid) {
-                       p = plyr
-                   }
-               })
-           }
+            if (store.state.gameid) {
+                store.state.players.map(plyr => {
+                    if (plyr.playerid == store.state.playerid) {
+                        p = plyr
+                    }
+                })
+            }
             return p
         }
     },
     methods: {
         createPlayer() {
-            axios.post(store.state.siteUrl +'api/users', {
+            axios.post(store.state.siteUrl + 'api/users' + this.gameselection, {
                     playername: this.playerName
                 })
                 .then(response => {
@@ -119,14 +143,15 @@ const Home = {
                     console.log('There was an error: ' + error.message)
                 })
         },
-        startNewGame(){
-// post description to /api
-            axios.post(store.state.siteUrl +'api', {
+        startNewGame() {
+            // post description to /api
+            axios.post(store.state.siteUrl + 'api', {
                     description: this.gameDescription
                 })
                 .then(response => {
-                    store.commit('setPlayerid', response.data.id)
-                    this.playerId = response.data.id
+                    this.createPlayer()
+                    // store.commit('setPlayerid', response.data.id)
+                    // this.playerId = response.data.id
                     this.refreshPlayers()
                 })
                 .catch(error => {
@@ -134,7 +159,7 @@ const Home = {
                 })
         },
         gotPhrase(id) {
-             if (!store.state.gameOver) {
+            if (!store.state.gameOver) {
                 axios.put(store.state.siteUrl + 'api/players/' + store.state.playerid + '/' + id)
                     .then(response => {
                         this.refreshPlayers()
@@ -145,7 +170,7 @@ const Home = {
                     .catch(error => {
                         console.log('There was an error: ' + error.message)
                     })
-             }
+            }
         },
         refreshPlayers() {
             axios.get(store.state.siteUrl + 'api/' + store.state.gameid + store.state.playerid)
@@ -156,8 +181,8 @@ const Home = {
                     console.log('There was an error: ' + error.message)
                 })
         },
-        refreshGames(){
-             axios.get(store.state.siteUrl + 'api')
+        refreshGames() {
+            axios.get(store.state.siteUrl + 'api')
                 .then(response => {
                     store.commit('setGames', response.data.games)
                 })
@@ -167,14 +192,16 @@ const Home = {
         },
         PlayerRefreshLoop() {
             var self = this
-             if (!store.state.gameOver) { this.refreshPlayers() }
+            if (!store.state.gameOver) {
+                this.refreshPlayers()
+            }
             setTimeout(function () {
                 self.PlayerRefreshLoop()
             }, 5000);
         }
     },
     created: function () {
-       this.refreshGames();
+        this.refreshGames();
         if (store.state.gameid) {
             this.PlayerRefreshLoop();
         }
@@ -188,7 +215,7 @@ const store = new Vuex.Store({
         gameid: undefined,
         winner: undefined,
         gameOver: false,
-        games: [], //array of objects with {description, id}
+        games: [], //array of objects with {description, id, gameon}
         siteUrl: this.document.URL
     },
     mutations: {
@@ -198,13 +225,13 @@ const store = new Vuex.Store({
         setPlayerid(state, item) {
             state.playerid = item
         },
-        setGames(state, gameslist){
+        setGames(state, gameslist) {
             state.games = gameslist
         },
         setWinner(state, name) {
             state.winner = name
             state.gameOver = true
-        } 
+        }
     }
 })
 
@@ -229,7 +256,7 @@ new Vue({
         }
     },
     created() {
-        axios.get(store.state.siteUrl+'api')
+        axios.get(store.state.siteUrl + 'api')
             .then(response => {
                 store.commit('setPlayers', response.data.players)
             })
