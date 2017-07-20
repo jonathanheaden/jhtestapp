@@ -17,11 +17,28 @@ const Home = {
                 <li class="playername">{{player.name}}</li>
                 <li v-for="phrase in player.card" class="cardphrase">{{phrase}}</li>
         </ul>
-        <form @submit.prevent="createPlayer" v-show="showNewPlayerForm">
+        <form >
         <fieldset>
             <legend>New Player</legend>
-            <label>Name</label><input type="text" required v-model="playerName"> 
-            <button type="Submit">Join Game</button>
+            <table>
+                <tr>
+                <td>
+                <label>Name</label> </td>
+                <td><input type="text" required v-model="playerName"> </td>
+                </tr> 
+                <tr>
+                <tr><td><label>New Game Description</label></td><td><input type="text" v-model="gameDescription"> </td>
+                <td><button v-on:click="startNewGame()">Start & Join New Game</button></td>
+                </tr>
+                <tr><td colspan=3 align="center" v-show="areThereGamesInProgress">Or join one of these games</td></tr>
+                <tr>
+                <td colspan=2 align="right">
+                <select v-model="gameselection" v-show="areThereGamesInProgress">
+                    <option v-for="(item, index) in gameslist" :value=item.id :selected="(gameselection == 'item.id')">{{item.description}}</option>
+                </select>
+                </td>
+                <td><button v-on:click="createPlayer()" v-show="areThereGamesInProgress">Join Game</button></td></tr>
+            </table>
         </fieldset>
         </form>
 
@@ -29,11 +46,19 @@ const Home = {
     data: function () {
         return {
             playerName: '',
-            player: store.state.thisplayer,
-            winner: store.state.winner
+            gameselection: '',
+            gameDescription:'',
+            player: '',
+            winner: ''
         }
     },
     computed: {
+        gameslist(){
+            return store.state.games
+        },
+        areThereGamesInProgress() {
+            return store.state.games.length > 0
+        },
         showNewPlayerForm() {
             return (store.state.players.length < 6) && (store.state.playerid == '007')
         },
@@ -46,23 +71,37 @@ const Home = {
                 winner: store.state.winner
             }
         },
-        players(){
+        players() {
             var oplayers = []
-            store.state.players.forEach(function (item, index, array) {
-                if (item.playerid != store.state.playerid) {oplayers.push(item)}
-            })
-            return oplayers 
+            if (store.state.gameid) {
+                store.state.players.map(plyr => {
+                    if (plyr.playerid != store.state.playerid) {
+                        oplayers.push(plyr)
+                    }
+                })
+                // store.state.players.forEach(function (item, index, array) {
+                //     if (item.playerid != store.state.playerid) {oplayers.push(item)}
+                // })
+            }
+            return oplayers
         },
         thisplayer(){
             var p = {
                 name: '',
                 card: []
             }
-             store.state.players.forEach(function (item, index, array) {        
-                if (item.playerid == store.state.playerid) {
-                    p = item
-                }
-            })
+            //  store.state.players.forEach(function (item, index, array) {        
+            //     if (item.playerid == store.state.playerid) {
+            //         p = item
+            //     }
+            // })
+           if (store.state.gameid) {
+               store.state.players.map(plyr => {
+                   if (plyr.playerid == store.state.playerid) {
+                       p = plyr
+                   }
+               })
+           }
             return p
         }
     },
@@ -70,6 +109,20 @@ const Home = {
         createPlayer() {
             axios.post(store.state.siteUrl +'api/users', {
                     playername: this.playerName
+                })
+                .then(response => {
+                    store.commit('setPlayerid', response.data.id)
+                    this.playerId = response.data.id
+                    this.refreshPlayers()
+                })
+                .catch(error => {
+                    console.log('There was an error: ' + error.message)
+                })
+        },
+        startNewGame(){
+// post description to /api
+            axios.post(store.state.siteUrl +'api', {
+                    description: this.gameDescription
                 })
                 .then(response => {
                     store.commit('setPlayerid', response.data.id)
@@ -95,9 +148,18 @@ const Home = {
              }
         },
         refreshPlayers() {
-            axios.get(store.state.siteUrl + 'api/game/' + store.state.playerid)
+            axios.get(store.state.siteUrl + 'api/' + store.state.gameid + store.state.playerid)
                 .then(response => {
                     store.commit('setPlayers', response.data.players)
+                })
+                .catch(error => {
+                    console.log('There was an error: ' + error.message)
+                })
+        },
+        refreshGames(){
+             axios.get(store.state.siteUrl + 'api')
+                .then(response => {
+                    store.commit('setGames', response.data.games)
                 })
                 .catch(error => {
                     console.log('There was an error: ' + error.message)
@@ -112,7 +174,10 @@ const Home = {
         }
     },
     created: function () {
-        this.PlayerRefreshLoop();
+       this.refreshGames();
+        if (store.state.gameid) {
+            this.PlayerRefreshLoop();
+        }
     }
 }
 
@@ -120,8 +185,10 @@ const store = new Vuex.Store({
     state: {
         players: [],
         playerid: '007',
+        gameid: undefined,
         winner: undefined,
         gameOver: false,
+        games: [], //array of objects with {description, id}
         siteUrl: this.document.URL
     },
     mutations: {
@@ -131,10 +198,12 @@ const store = new Vuex.Store({
         setPlayerid(state, item) {
             state.playerid = item
         },
+        setGames(state, gameslist){
+            state.games = gameslist
+        },
         setWinner(state, name) {
             state.winner = name
             state.gameOver = true
-            // need to send the winner details to the api
         } 
     }
 })
@@ -160,7 +229,7 @@ new Vue({
         }
     },
     created() {
-        axios.get(store.state.siteUrl+'api/game/007')
+        axios.get(store.state.siteUrl+'api')
             .then(response => {
                 store.commit('setPlayers', response.data.players)
             })
