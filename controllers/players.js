@@ -9,7 +9,8 @@ var landing = function (req, res) {
     playerstate.get('games').forEach(function (element) {
         var item = {
             description: element.description,
-            id: element.id
+            id: element.id,
+            gameon: !element.gameover
         }
         games.push(item)
     }, this);
