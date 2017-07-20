@@ -38,7 +38,7 @@ const Home = {
                 </select>
                 </td>
                     <td><button v-on:click="createPlayer()" v-show="gamePlacesAvailable">Join Game</button></td>
-                    <td v-show="gamePlacesAvailable">Game is Full :(</td>
+                    <td v-show="!gamePlacesAvailable">Game is Full :(</td>
                 </tr>
             </table>
         </fieldset>
@@ -75,9 +75,11 @@ const Home = {
         showNewPlayerForm() {
             var result = false
             if (this.gameselection) {
+                console.log(this.gameselection)
                 store.state.games.map(game => {
                     if (game.id == this.gameselection) {
-                        result = (game.players && game.players.length < 6)
+                        console.log(game)
+                        result = (game.numplayers < 6)
                     }
                 })
             }
