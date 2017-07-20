@@ -10,7 +10,8 @@ var landing = function (req, res) {
         var item = {
             description: element.description,
             id: element.id,
-            gameon: !element.gameover
+            gameon: !element.gameover,
+            numplayers: element.players.length
         }
         games.push(item)
     }, this);
