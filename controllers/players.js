@@ -164,7 +164,6 @@ var putplayer = function (req, res) {
             })
         } else {
             if (['0', '1', '2', '3', '4'].includes(phraseid)) {
-                 console.log(game)
                 var p = getplayeringame(playerid,game)
                 p.vals[phraseid] = true
                 if (!p.vals.includes(false)) {
@@ -174,10 +173,8 @@ var putplayer = function (req, res) {
                     }
                 }
                 var newstateofplayers = []
-                console.log('game ')
-                console.log(game)
-                game.players.foreach(function(plyr){
-                    if (!plyr.playerid == playerid){
+                game.players.map(plyr => {
+                    if (!plyr.id == playerid ) {
                         newstateofplayers.push(plyr)
                     } else {
                         newstateofplayers.push(p)
@@ -232,13 +229,9 @@ function getgame(id) {
     return game
 }
 function getplayeringame(id, game){
-    console.log(id)
-    console.log(game)
     var player
     game.players.forEach(function(p){
-        console.log(p)
-        if (p.id == id) { /// JUst changed this <----
-            console.log('found')
+        if (p.id == id) { 
             player = p
         }
     })
@@ -247,8 +240,6 @@ function getplayeringame(id, game){
 
 module.exports.landing = landing
 module.exports.putplayer = putplayer
-//module.exports.getplayer = getplayer
 module.exports.newplayer = newplayer
 module.exports.newgame = newgame
-// module.exports.readplayers = readplayers
 module.exports.readgame = readgame
