@@ -4,8 +4,8 @@ const Home = {
     template: `
     <div class="user">
     <h1> Bingo Game</h1>
-        <h2 v-show="gameOver.status">Winner is {{gameOver.winner}}</h2>
-        <h3>Your player</h3>
+        <h2 v-show="!gameOver">Winner is {{winner}}</h2>
+        <h3 v-show="playerjoined">Your player</h3>
         <ul>
             <li v-for="(item, index) in thisplayer.card" v-show="thisplayer.vals[index]">{{item}}</li>
         </ul>
@@ -18,7 +18,7 @@ const Home = {
                 <li v-for="phrase in player.card" class="cardphrase">{{phrase}}</li>
         </ul>
         <form >
-        <fieldset>
+        <fieldset v-show="!playerjoined">
             <legend>New Player</legend>
             <table>
                 <tr>
@@ -37,8 +37,8 @@ const Home = {
                     <option v-for="(item, index) in gameslist" :value=item.id :selected="(gameselection == 'item.id')">{{item.description}}</option>
                 </select>
                 </td>
-                    <td><button v-on:click="createPlayer()" v-show="gamePlacesAvailable">Join Game</button></td>
-                    <td v-show="!gamePlacesAvailable">Game is Full :(</td>
+                    <td><button v-on:click="createPlayer()" v-show="gamePlacesAvailable">Join Game</button>
+                    <div v-show="(areThereGamesInProgress && !showNewPlayerForm)">Game is Full :(</div></td>
                 </tr>
             </table>
         </fieldset>
@@ -49,9 +49,8 @@ const Home = {
         return {
             playerName: '',
             gameselection: undefined,
-            gameDescription: '',
-            player: '',
-            winner: ''
+            gameDescription: ''
+            // player: ''
         }
     },
     computed: {
@@ -89,17 +88,17 @@ const Home = {
             return (this.areThereGamesInProgress && this.showNewPlayerForm)
         },
         playerjoined() {
-            return (store.state.playerid != '007')
+            return (store.state.playerid != undefined)
         },
         gameOver() {
-            return {
-                status: store.state.gameOver,
-                winner: store.state.winner
-            }
+            return store.state.gameOver
+        },
+        winner(){
+            return store.state.winner
         },
         players() {
             var oplayers = []
-            if (store.state.gameid) {
+            if (store.state.gameid && store.state.players) {
                 store.state.players.map(plyr => {
                     if (plyr.playerid != store.state.playerid) {
                         oplayers.push(plyr)
@@ -111,6 +110,12 @@ const Home = {
             }
             return oplayers
         },
+        gameid(){
+            return store.state.gameid
+        },
+        playerid(){
+            return store.state.playerid
+        },
         thisplayer() {
             var p = {
                 name: '',
@@ -121,7 +126,7 @@ const Home = {
             //         p = item
             //     }
             // })
-            if (store.state.gameid) {
+            if (store.state.gameid && store.state.players) {
                 store.state.players.map(plyr => {
                     if (plyr.playerid == store.state.playerid) {
                         p = plyr
@@ -132,14 +137,21 @@ const Home = {
         }
     },
     methods: {
-        createPlayer() {
-            axios.post(store.state.siteUrl + 'api/users' + this.gameselection, {
+        createPlayer(){
+            var gameidtojoin = this.gameselection ? this.gameselection : store.state.gameid
+            store.commit('setPlayername',this.playername)
+            this.createPlayerinGame(gameidtojoin)
+        },
+        createPlayerinGame(gameidtojoin) {
+            console.log(this.playerName + ' ' + gameidtojoin)
+            axios.post(store.state.siteUrl + 'api/users/' + gameidtojoin, {
                     playername: this.playerName
                 })
                 .then(response => {
-                    store.commit('setPlayerid', response.data.id)
-                    this.playerId = response.data.id
-                    this.refreshPlayers()
+                    console.log(response.data)
+                    store.commit('setPlayerid', response.data.playerid)
+                    this.playerId = response.data.playerid
+                    //this.refreshPlayers()
                 })
                 .catch(error => {
                     console.log('There was an error: ' + error.message)
@@ -151,6 +163,7 @@ const Home = {
                     description: this.gameDescription
                 })
                 .then(response => {
+                    store.commit('setGame',response.data.id)
                     this.createPlayer()
                     // store.commit('setPlayerid', response.data.id)
                     // this.playerId = response.data.id
@@ -162,7 +175,7 @@ const Home = {
         },
         gotPhrase(id) {
             if (!store.state.gameOver) {
-                axios.put(store.state.siteUrl + 'api/players/' + store.state.playerid + '/' + id)
+                axios.put(store.state.siteUrl + 'api/players/' + this.game.id + '/' + id)
                     .then(response => {
                         this.refreshPlayers()
                         if (response.data.gamestatus == 'Game Over') {
@@ -175,8 +188,9 @@ const Home = {
             }
         },
         refreshPlayers() {
-            axios.get(store.state.siteUrl + 'api/' + store.state.gameid + store.state.playerid)
+            axios.get(store.state.siteUrl + 'api/' + this.gameid + "/" + this.playerid)
                 .then(response => {
+                    console.log(response.data)
                     store.commit('setPlayers', response.data.players)
                 })
                 .catch(error => {
@@ -184,6 +198,7 @@ const Home = {
                 })
         },
         refreshGames() {
+            console.log('refresh games')
             axios.get(store.state.siteUrl + 'api')
                 .then(response => {
                     store.commit('setGames', response.data.games)
@@ -194,7 +209,8 @@ const Home = {
         },
         PlayerRefreshLoop() {
             var self = this
-            if (!store.state.gameOver) {
+            console.log(this)
+            if (this.gameid && !this.gameOver) {
                 this.refreshPlayers()
             }
             setTimeout(function () {
@@ -203,8 +219,10 @@ const Home = {
         }
     },
     created: function () {
+        console.log(this)
         this.refreshGames();
-        if (store.state.gameid) {
+        if (this.gameid) {
+            console.log('in game')
             this.PlayerRefreshLoop();
         }
     }
@@ -213,12 +231,13 @@ const Home = {
 const store = new Vuex.Store({
     state: {
         players: [],
-        playerid: '007',
+        playerid: undefined,
         gameid: undefined,
+        playername: undefined,
         winner: undefined,
         gameOver: false,
         games: [], //array of objects with {description, id, gameon}
-        siteUrl: this.document.URL
+        siteUrl: this.document.URL.split('?')[0]
     },
     mutations: {
         setPlayers(state, resultingplayers) {
@@ -226,6 +245,12 @@ const store = new Vuex.Store({
         },
         setPlayerid(state, item) {
             state.playerid = item
+        },
+        setPlayername(state, item) {
+            state.playername = item
+        },
+        setGame(state,gameid){
+            state.gameid = gameid
         },
         setGames(state, gameslist) {
             state.games = gameslist
@@ -256,14 +281,14 @@ new Vue({
         players() {
             return store.state.players
         }
-    },
-    created() {
-        axios.get(store.state.siteUrl + 'api')
-            .then(response => {
-                store.commit('setPlayers', response.data.players)
-            })
-            .catch(error => {
-                console.log('There was an error: ' + error.message)
-            })
     }
+    // created() {
+    //     axios.get(store.state.siteUrl + 'api')
+    //         .then(response => {
+    //             store.commit('setPlayers', response.data.players)
+    //         })
+    //         .catch(error => {
+    //             console.log('There was an error: ' + error.message)
+    //         })
+    // }
 })
