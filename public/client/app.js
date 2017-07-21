@@ -24,7 +24,7 @@ const Home = {
                 <tr>
                 <td>
                 <label>Name</label> </td>
-                <td><input type="text" required v-model="playerName"> </td>
+                <td><input type="text" v-model="playerName"> </td>
                 </tr> 
                 <tr>
                 <tr><td><label>New Game Description</label></td><td><input type="text" v-model="gameDescription"> </td>
@@ -47,10 +47,9 @@ const Home = {
     </div>`,
     data: function () {
         return {
-            playerName: '',
+            playerName: undefined,
             gameselection: undefined,
-            gameDescription: ''
-            // player: ''
+            gameDescription: undefined
         }
     },
     computed: {
@@ -126,14 +125,9 @@ const Home = {
         thisplayer() {
             var p = {
                 name: '',
-                card: []
+                phrases: [],
+                vals:[]
             }
-            //  store.state.players.forEach(function (item, index, array) {        
-            //     if (item.playerid == store.state.playerid) {
-            //         p = item
-            //     }
-            // })
-
             if (this.gameid && this.players) {
                 this.players.map(plyr => {
                     if (plyr.id == this.playerid) {
@@ -148,6 +142,7 @@ const Home = {
         createPlayer(){
             var gameidtojoin = this.gameselection ? this.gameselection : store.state.gameid
             store.commit('setPlayername',this.playerName)
+            store.commit('setGame',gameidtojoin) // <--- just changed this
             console.log('join game ' + gameidtojoin)
             this.createPlayerinGame(gameidtojoin)
         },
@@ -202,7 +197,7 @@ const Home = {
             }
         },
         refreshPlayers() {
-            axios.get(store.state.siteUrl + 'api/' + this.gameid + "/" + this.playerid)
+            axios.get(store.state.siteUrl + 'api/' + store.state.gameid + "/" + store.state.playerid)
                 .then(response => {
                     console.log(response.data)
                     store.commit('setPlayers', response.data.players)
@@ -223,8 +218,8 @@ const Home = {
         },
         PlayerRefreshLoop() {
             var self = this
-            console.log(this)
-            if (this.gameid && !this.gameOver) {
+            console.log('in looop')
+            if (store.state.gameid && !store.state.gameOver) {
                 this.refreshPlayers()
             }
             setTimeout(function () {
@@ -233,12 +228,12 @@ const Home = {
         }
     },
     created: function () {
-        console.log(this)
+        console.log(' start loop ')
         this.refreshGames();
-        if (this.gameid) {
-            console.log('in game')
-            this.PlayerRefreshLoop();
-        }
+        // if (this.gameid) {
+        //     console.log('in game')
+        this.PlayerRefreshLoop();
+        // }
     }
 }
 
