@@ -4,20 +4,20 @@ const Home = {
     template: `
     <div class="user">
     <h1> Bingo Game</h1>
-        <h2 v-show="!gameOver">Winner is {{winner}}</h2>
+        <h2 v-show="gameOver">Winner is {{winner}}</h2>
         <h3 v-show="playerjoined">Your player</h3>
         <ul>
-            <li v-for="(item, index) in thisplayer.card" v-show="thisplayer.vals[index]">{{item}}</li>
+            <li v-for="(item, index) in thisplayer.phrases" v-show="thisplayer.vals[index]">{{item}}</li>
         </ul>
         <ul class="bingocard player" v-show="playerjoined">
-            <li>{{thisplayer.name}}</li>
-            <li v-for="(item, index) in thisplayer.card"><button v-on:click="gotPhrase(index)" v-show="!(thisplayer.vals[index])">{{item}}</button></li>
+            <li class="playername">{{thisplayer.name}}</li>
+            <li v-for="(item, index) in thisplayer.phrases"><button v-on:click="gotPhrase(index)" v-show="!(thisplayer.vals[index])">{{item}}</button></li>
         </ul>   
-         <ul class="bingocard" v-for="player in players">       
+         <ul class="bingocard" v-for="player in otherplayers">       
                 <li class="playername">{{player.name}}</li>
                 <li v-for="phrase in player.card" class="cardphrase">{{phrase}}</li>
         </ul>
-        <form >
+        <form @click.prevent="validate">
         <fieldset v-show="!playerjoined">
             <legend>New Player</legend>
             <table>
@@ -28,7 +28,7 @@ const Home = {
                 </tr> 
                 <tr>
                 <tr><td><label>New Game Description</label></td><td><input type="text" v-model="gameDescription"> </td>
-                <td><button v-on:click="startNewGame()">Start & Join New Game</button></td>
+                <td><button v-on:click="startNewGame">Start & Join New Game</button></td>
                 </tr>
                 <tr><td colspan=3 align="center" v-show="areThereGamesInProgress">Or join one of these games</td></tr>
                 <tr>
@@ -38,7 +38,7 @@ const Home = {
                 </select>
                 </td>
                     <td><button v-on:click="createPlayer()" v-show="gamePlacesAvailable">Join Game</button>
-                    <div v-show="(areThereGamesInProgress && !showNewPlayerForm)">Game is Full :(</div></td>
+                    <div v-show="(areThereGamesInProgress && !showNewPlayerForm)">{{gameselectionmessage}}</div></td>
                 </tr>
             </table>
         </fieldset>
@@ -96,11 +96,15 @@ const Home = {
         winner(){
             return store.state.winner
         },
-        players() {
+        players(){
+            return store.state.players
+        },
+        otherplayers() {
             var oplayers = []
             if (store.state.gameid && store.state.players) {
                 store.state.players.map(plyr => {
-                    if (plyr.playerid != store.state.playerid) {
+                    console.log(plyr)
+                    if (plyr.id != store.state.playerid) {
                         oplayers.push(plyr)
                     }
                 })
@@ -116,6 +120,9 @@ const Home = {
         playerid(){
             return store.state.playerid
         },
+        gameselectionmessage(){
+        return (this.gameselection && this.gamePlacesAvailable) ? 'Game is Full :(' :''
+        },
         thisplayer() {
             var p = {
                 name: '',
@@ -126,9 +133,10 @@ const Home = {
             //         p = item
             //     }
             // })
-            if (store.state.gameid && store.state.players) {
-                store.state.players.map(plyr => {
-                    if (plyr.playerid == store.state.playerid) {
+
+            if (this.gameid && this.players) {
+                this.players.map(plyr => {
+                    if (plyr.id == this.playerid) {
                         p = plyr
                     }
                 })
@@ -139,19 +147,21 @@ const Home = {
     methods: {
         createPlayer(){
             var gameidtojoin = this.gameselection ? this.gameselection : store.state.gameid
-            store.commit('setPlayername',this.playername)
+            store.commit('setPlayername',this.playerName)
+            console.log('join game ' + gameidtojoin)
             this.createPlayerinGame(gameidtojoin)
         },
         createPlayerinGame(gameidtojoin) {
-            console.log(this.playerName + ' ' + gameidtojoin)
+            console.log(this.playerName + ' : ' + gameidtojoin)
             axios.post(store.state.siteUrl + 'api/users/' + gameidtojoin, {
                     playername: this.playerName
                 })
                 .then(response => {
                     console.log(response.data)
                     store.commit('setPlayerid', response.data.playerid)
-                    this.playerId = response.data.playerid
+                    //this.playerId = response.data.playerid
                     //this.refreshPlayers()
+                    this.refreshPlayers()
                 })
                 .catch(error => {
                     console.log('There was an error: ' + error.message)
@@ -165,17 +175,21 @@ const Home = {
                 .then(response => {
                     store.commit('setGame',response.data.id)
                     this.createPlayer()
-                    // store.commit('setPlayerid', response.data.id)
+                    //store.commit('setPlayerid', response.data.playerid)
                     // this.playerId = response.data.id
-                    this.refreshPlayers()
+                    
                 })
                 .catch(error => {
                     console.log('There was an error: ' + error.message)
                 })
         },
+        validate(){
+
+        },
         gotPhrase(id) {
+            console.log('pushed ' + id)
             if (!store.state.gameOver) {
-                axios.put(store.state.siteUrl + 'api/players/' + this.game.id + '/' + id)
+                axios.put(store.state.siteUrl + 'api/' + store.state.gameid + '/' + store.state.playerid + '/' + id)
                     .then(response => {
                         this.refreshPlayers()
                         if (response.data.gamestatus == 'Game Over') {
