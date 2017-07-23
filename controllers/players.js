@@ -169,16 +169,17 @@ var putplayer = function (req, res) {
                 var p = getplayeringame(playerid,game)
                 p.vals[phraseid] = true
                 if (!p.vals.includes(false)) {
-                    if (!playerstate.get('gameover')) {
-                        playerstate.put('gameover', true)
-                        playerstate.put('winner', p.name)
-                    }
+                    game.gameover = true
+                    game.winner = p.name
                 }
                 var newstateofplayers = []
                 game.players.map(plyr => {
-                    if (!plyr.id == playerid ) {
+                    console.log(plyr.id + ' ?== '+ playerid)
+                    console.log(!plyr.id == playerid ) 
+                    if (!(plyr.id == playerid)) {
                         newstateofplayers.push(plyr)
                     } else {
+                        
                         newstateofplayers.push(p)
                     }
                 })
@@ -186,9 +187,9 @@ var putplayer = function (req, res) {
                 newGames.push(game)
                 playerstate.put('games', newGames)
                 ctrlShared.sendJsonResponse(res, 200, {
-                    "player": playerstate.get(playerid),
-                    'gamestatus': playerstate.get('gameover') ? 'Game Over' : 'Game On',
-                    'winner': (playerstate.get('winner'))
+                    "player": playerid,
+                    'gamestatus': game.gameover ? 'Game Over' : 'Game On',
+                    'winner': game.winner
                 });
             } else {
                 ctrlShared.sendJsonResponse(res, 405, {

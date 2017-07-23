@@ -140,7 +140,7 @@ const Home = {
     },
     methods: {
         createPlayer(){
-            var gameidtojoin = this.gameselection ? this.gameselection : store.state.gameid
+            var gameidtojoin = this.gameselection ? this.gameselection : this.gameid
             store.commit('setPlayername',this.playerName)
             store.commit('setGame',gameidtojoin) // <--- just changed this
             console.log('join game ' + gameidtojoin)
