@@ -17,13 +17,34 @@ a {
 }
 
 .bingocard li:hover{
- 
+ background: cadetblue;
 }
 
+.markedsayings {
+  width: 100%;
+  display: inline-flex;
+  background:seagreen;  
+  font-size: 17px;
+  text-decoration: none;
+}
+
+.markedsayings li {
+  padding: 14px 16px
+}
+
+.warningnote {
+  background: orangered;
+  color: whitesmoke;
+  font: 16px "courier", Helvetica, Arial, sans-serif;
+}
 ul.bingocard.player li:hover {
   background-color: #c0ffee;
   color: goldenrod
 }
+ul.bingocard.player.playername li:hover {
+  background-color: #c0ffee;
+}
+
 .bingocard li{
   padding: 15px 15px;
   list-style: none
