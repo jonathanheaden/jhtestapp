@@ -5,8 +5,9 @@ const Home = {
     <div class="user">
     <h1> Bingo Game</h1>
         <h2 v-show="gameOver">Winner is {{winner}}</h2>
+        <h3 v-show="showWarn" class="warningnote">{{warningText}}</h3>
         <h3 v-show="playerjoined">Your player</h3>
-        <ul>
+        <ul class="markedsayings">
             <li v-for="(item, index) in thisplayer.phrases" v-show="thisplayer.vals[index]">{{item}}</li>
         </ul>
         <ul class="bingocard player" v-show="playerjoined">
@@ -49,7 +50,8 @@ const Home = {
         return {
             playerName: undefined,
             gameselection: undefined,
-            gameDescription: undefined
+            gameDescription: undefined,
+            warningText: undefined
         }
     },
     computed: {
@@ -82,6 +84,9 @@ const Home = {
                 })
             }
             return result
+        },
+        showWarn(){
+            return this.gameDescription == undefined
         },
         gamePlacesAvailable(){
             return (this.areThereGamesInProgress && this.showNewPlayerForm)
@@ -163,20 +168,24 @@ const Home = {
                 })
         },
         startNewGame() {
-            // post description to /api
-            axios.post(store.state.siteUrl + 'api', {
-                    description: this.gameDescription
-                })
-                .then(response => {
-                    store.commit('setGame',response.data.id)
-                    this.createPlayer()
-                    //store.commit('setPlayerid', response.data.playerid)
-                    // this.playerId = response.data.id
-                    
-                })
-                .catch(error => {
-                    console.log('There was an error: ' + error.message)
-                })
+            if (!this.gameDescription) {
+                this.warningText = 'A game decription is needed to start new game'
+            } else {
+                this.warningText = undefined
+                axios.post(store.state.siteUrl + 'api', {
+                        description: this.gameDescription
+                    })
+                    .then(response => {
+                        store.commit('setGame', response.data.id)
+                        this.createPlayer()
+                        //store.commit('setPlayerid', response.data.playerid)
+                        // this.playerId = response.data.id
+
+                    })
+                    .catch(error => {
+                        console.log('There was an error: ' + error.message)
+                    })
+            }
         },
         validate(){
 
