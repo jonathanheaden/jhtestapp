@@ -7,13 +7,15 @@ playerstate.put('games', [])
 var landing = function (req, res) {
     var games = []
     playerstate.get('games').forEach(function (element) {
-        var item = {
-            description: element.description,
-            id: element.id,
-            gameon: !element.gameover,
-            numplayers: element.players.length
+        if (!element.gameover && (element.players.length) < 5) {
+            var item = {
+                description: element.description,
+                id: element.id,
+                gameon: !element.gameover,
+                numplayers: element.players.length
+            }
+            games.push(item)
         }
-        games.push(item)
     }, this);
     ctrlShared.sendJsonResponse(res, 201, {
         'games': games
