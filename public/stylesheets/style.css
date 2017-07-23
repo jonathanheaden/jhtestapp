@@ -20,16 +20,11 @@ a {
  background: cadetblue;
 }
 
-.markedsayings {
-  width: 100%;
-  display: inline-flex;
+.markedsayings { 
   background:seagreen;  
   font-size: 17px;
-  text-decoration: none;
-}
-
-.markedsayings li {
-  padding: 14px 16px
+  padding: 14px 16px;
+  margin: 5% auto;
 }
 
 .warningnote {
