@@ -210,7 +210,9 @@ const Home = {
         refreshPlayers() {
             axios.get(store.state.siteUrl + 'api/' + store.state.gameid + "/" + store.state.playerid)
                 .then(response => {
-                    console.log(response.data)
+                    if (response.data.status){
+                        store.commit('setWinner',response.data.winner)
+                    }
                     store.commit('setPlayers', response.data.players)
                 })
                 .catch(error => {
@@ -229,7 +231,6 @@ const Home = {
         },
         PlayerRefreshLoop() {
             var self = this
-            console.log('in looop')
             if (store.state.gameid && !store.state.gameOver) {
                 this.refreshPlayers()
             }
@@ -239,7 +240,6 @@ const Home = {
         }
     },
     created: function () {
-        console.log(' start loop ')
         this.refreshGames();
         // if (this.gameid) {
         //     console.log('in game')
@@ -302,13 +302,4 @@ new Vue({
             return store.state.players
         }
     }
-    // created() {
-    //     axios.get(store.state.siteUrl + 'api')
-    //         .then(response => {
-    //             store.commit('setPlayers', response.data.players)
-    //         })
-    //         .catch(error => {
-    //             console.log('There was an error: ' + error.message)
-    //         })
-    // }
 })

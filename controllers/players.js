@@ -136,6 +136,8 @@ var readgame = function (req, res) {
         }, this);
         ctrlShared.sendJsonResponse(res, 200, {
             "game": "conference call bingo",
+            "status": game.gameover,
+            "winner":game.winner,
             'players': response
         });
     }
