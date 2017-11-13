@@ -14,22 +14,10 @@ var thingsthataresaid = [
     'I didn\'t catch that .. can you repeat?',
     'No it is still loading',
     'Can you hear me now?',
-    'No',
-    'Yes',
-    'I can\'t believe it\'s not',
-    'The Techbar is Bloatware',
-    'That\'s not my job',
-    'Engineering can help us with that',
-    'Follow Process',
-    'Scragile',
-    'Avatar',
-    'Ghost',
-    'Waterfall',
-    'Share your screen',
-    'PPM Code',
-    'BINGO',
-    'Take action',
-    'Json'
+    '[Random stranger enters call]',
+    'touch base',
+    'loop in',
+    '[any mention of helicopters or ball pits]'
 ];
 
 var sendJsonResponse = function (res, status, content) {
